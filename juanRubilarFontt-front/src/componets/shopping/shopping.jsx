@@ -34,7 +34,6 @@ const Shopping = () => {
           const response = await mercadoLibreApi.get("/getUserPurchases/"+ userInfo.user_id)
           setPaginationPurchases(response.data.data)
           settotalPages( Math.ceil( response.data.data.length / itemsPerPage))
-          
         }
         
         getShipmentId().catch(error => {
