@@ -6,14 +6,22 @@ import { useSelector } from 'react-redux'
 import mercadoLibreApi from "../../utils/api/mercadoLibreApi";
 import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
+import MyPagination from "../pagination/pagination";
+
 
 const Shopping = () => {
   
   const navigate = useNavigate()
   const state = useSelector(state => state)
   const {shoppingReducer : { userInfo}} = state;
-  const [dataGetUserPurchases, setGetUserPurchases] = useState([]);
+  const [paginationPurchases, setPaginationPurchases] = useState();
+  const [totalPages, settotalPages] = useState(1);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 2;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
 
   const handleDetails = (objShopping) => {
     navigate('/details/'+objShopping.purchase_id, { state : { objShopping }} )
@@ -24,8 +32,11 @@ const Shopping = () => {
        {
           async function getShipmentId() {
           const response = await mercadoLibreApi.get("/getUserPurchases/"+ userInfo.user_id)
-          setGetUserPurchases(response.data.data);     
+          setPaginationPurchases(response.data.data)
+          settotalPages( Math.ceil( response.data.data.length / itemsPerPage))
+          
         }
+        
         getShipmentId().catch(error => {
           setError(error);
         });
@@ -34,12 +45,16 @@ const Shopping = () => {
     
   if (error) console.log("getShipmentId " + error);
 
+  const handleClick = (page) => {
+    setCurrentPage(page);
+  };
+
 
     return (
 
       <>
      <div> 
-      <Table striped bordered hover>
+       <Table striped bordered hover>
             <thead>
               <tr>
                 <th> #Id </th>
@@ -52,10 +67,10 @@ const Shopping = () => {
             </thead>
             <tbody>
              {
-                dataGetUserPurchases?.map((val, key) => {
+                paginationPurchases?.slice(startIndex, endIndex).map((val, key) => {
                   return (
-                    <tr key={key}>
-                    <td >{  val.purchase_id } </td>
+                 <tr key={key}>
+                    <td >{  val.purchase_id }</td>
                     <td >{  val.title } </td>
                     <td >{  val.purchase_id } </td>
                     <td >{  val.amount } </td>
@@ -65,8 +80,14 @@ const Shopping = () => {
                 )
               })}
             </tbody>
-          </Table>
+          </Table> 
 
+            <MyPagination 
+              total= {totalPages}
+              current={currentPage}
+              onChangePage={handleClick} 
+            />
+                 
           </div>
       </>
     )
